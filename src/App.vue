@@ -1,59 +1,81 @@
 <template>
-  <!-- v-if 내의 조건식이 true일 때 실행 -->
-  <!-- v-if, v-else-if, v-else -->
-  <div class="black-bg" v-if="modalOpened === true">
-    <div class="white-bg">
-      <h4>{{ roomData[roomIndex].title }}</h4>
-      <p>{{ roomData[roomIndex].content }}</p>
-      <button @click="modalOpened = false">닫기</button>
-    </div>
-  </div>
+  <!-- transition 태그로 애니메이션 적용하기 -->
+  <transition name="fade">
+    <Modal
+      @closeModal="modalOpened = false"
+      :roomData="roomData"
+      :roomIndex="roomIndex"
+      :modalOpened="modalOpened" />
+  </transition>
 
-  <div class="menu">
-    <!-- v-for 반복문 -->
-    <!-- Menus의 length 만큼 반복문이 실행 -->
-    <!-- 각 index의 데이터를 ele로 사용 가능 -->
-    <a v-for="v in Menus" :key="v">{{ v }}</a>
-  </div>
+  <Menu :menus="menus" />
 
-  <div v-for="(v, i) in roomData" :key="v">
-    <!-- 속성을 바인딩 하고싶은 경우 콜론(:) 사용 -->
-    <img :src="`${v.image}`" class="room-img" />
-    <h4
-      @click="
-        modalOpened = true;
-        roomIndex = i;
-      ">
-      {{ v.title }}
-    </h4>
-    <p>{{ v.price }}</p>
-    <!-- v-on:click, @click : vue방식 클릭 이벤트 -->
-  </div>
+  <Discount v-if="showDiscount === true" />
+
+  <button @click="sortPrice">가격 순 정렬</button>
+  <button @click="sortRefresh">되돌리기</button>
+
+  <Card
+    @openModal="
+      // 자식으로 부터 받은 emit의 이름(@openModal)과 데이터($event)
+      modalOpened = true;
+      roomIndex = $event;
+    "
+    :roomData="roomData[i]"
+    v-for="(v, i) in roomData"
+    :key="v" />
 </template>
 
 <script>
   import data from './assets/room';
+  import Card from './components/Card.vue';
+  import Discount from './components/Discount.vue';
+  import Menu from './components/Menu.vue';
+  import Modal from './components/Modal.vue';
 
   export default {
     name: 'App',
     // 데이터 바인딩을 위한 데이터 보관 : data()
     data() {
       return {
+        showDiscount: true,
+        roomOrigin: [...data],
         roomIndex: 0,
         roomData: data,
         modalOpened: false,
         // object형식으로 작성
-        Menus: ['Home', 'Shop', 'About'],
+        menus: ['Home', 'Shop', 'About'],
       };
     },
     // 함수 보관 : methods
     // 변수 사용 시 this 사용
     methods: {
-      // increase() {
-      //   this.reports++;
-      // },
+      sortPrice() {
+        this.roomData.sort((a, b) => a.price - b.price);
+      },
+      sortRefresh() {
+        this.roomData = [...this.roomOrigin];
+      },
     },
-    components: {},
+
+    // Lifecycle
+    // created: HTML 생성 전, 데이터만 존재할 때
+    created() {},
+    // mounted: vue가 mount된 후
+    mounted() {
+      setTimeout(() => {
+        this.showDiscount = false;
+      }, 2000);
+    },
+    // beforeUpdated: 컴포넌트가 update되기 전에
+    beforeUpdate() {},
+
+    components: {
+      Discount: Discount,
+      Modal: Modal,
+      Card: Card,
+      Menu: Menu,
+    },
   };
 </script>
 
@@ -65,6 +87,29 @@
   div {
     box-sizing: border-box;
   }
+
+  /* transition 태그 사용법 */
+  /* enter-leave */
+  .fade-enter-from {
+    opacity: 0;
+  }
+  .fade-enter-active {
+    transition: 0.3s;
+  }
+  .fade-enter-to {
+    opacity: 1;
+  }
+
+  .fade-leave-from {
+    opacity: 1;
+  }
+  .fade-leave-active {
+    transition: 0.3s;
+  }
+  .fade-leave-to {
+    opacity: 0;
+  }
+
   .menu {
     background: darkslateblue;
     padding: 15px;
@@ -92,5 +137,11 @@
     background: white;
     border-radius: 8px;
     padding: 20px;
+  }
+  .discount {
+    background: #eee;
+    padding: 10px;
+    margin: 10px;
+    border-radius: 5px;
   }
 </style>
